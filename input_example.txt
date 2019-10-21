@@ -1,0 +1,32 @@
+# cosmological and astrophysical parameters
+omega_M_0 = 0.29944
+omega_lambda_0 = 0.700558
+omega_b_0 = 0.046671
+axfrac = 0.02
+omega_d_0 = 0.2514178
+h = 0.69
+ns = 0.9655
+As = 2.1955e-9
+mnu = 0.06
+omega_HI_0 =       2.45e-4 / 0.69
+k_piv =            0.05 # [1/Mpc] 
+HI_halo_formula =  'PRA2017'
+HI_halo_formula_args = {'alpha': 0.09, 'beta': -0.58, 'vc0': 10**1.56}
+gamma_HI =         1.45
+c_HI0 =            28.65
+ma = -24
+components_for_P = ('CDM', 'baryon', 'axion')
+# experimental specifications
+experiment_number = 0
+ttot = 10000 #  [h]
+# analysis specifications
+noise = knox
+nonlinear_cutoff = False
+M_min =            8
+M_max =            17
+N_mass_mesh =      2000
+lmin = 1
+lmax = 1000
+Nl = 1000
+CAMB_kmax = 40.
+transfer_k_perlogint = 10
