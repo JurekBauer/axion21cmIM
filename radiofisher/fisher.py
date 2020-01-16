@@ -296,7 +296,7 @@ def deriv_wrapper(ell_arr, zmin, zmax, cosmo, analysis_specifications, deriv_opt
         cosmo_Aplus['omega_cdm_0'] = cosmo['omega_d_0'] * (1.0 - cosmo_Aplus['axion_fraction'])
         cosmo_Aminus['axion_fraction'] = cosmo['axion_fraction'] - Delta_axfrac
         cosmo_Aminus['omega_ax_0'] = cosmo_Aminus['axion_fraction'] * cosmo['omega_d_0']
-        cosmo_Aminus['omega_cdm_0'] = cosmo['omega_d_0'] * (1.0 - cosmo_Aplus['axion_fraction'])
+        cosmo_Aminus['omega_cdm_0'] = cosmo['omega_d_0'] * (1.0 - cosmo_Aminus['axion_fraction'])
         cachefile_plus = file_base + 'Aplus_Delta{}_z{}.npy'.format(Delta_axfrac, z)
         cachefile_minus = file_base + 'Aminus_Delta{}_z{}.npy'.format(Delta_axfrac, z)
         return return_derivative(cosmo_minus=cosmo_Aminus, cosmo_plus=cosmo_Aplus,
