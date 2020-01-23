@@ -15,7 +15,7 @@ comm = MPI.COMM_WORLD
 myid = comm.Get_rank()
 size = comm.Get_size()
 
-verbos = 1
+verbos = 0
 ################################################################################
 # Set-up experiment parameters
 ################################################################################
@@ -60,7 +60,6 @@ else:
 if cosmo_dic['mnu'] > 1.e-6:
     EXPT_LABEL += '_massive-neutrinos'
 EXPT_LABEL += '_ma%i_fiducial-axfrac%s' % (cosmo_dic['ma'], str(cosmo_dic['axion_fraction']))
-print(EXPT_LABEL)
 
 expt_list = [
     ('SKA1MID',     e.SKA1MIDfull),     # 0

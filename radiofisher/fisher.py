@@ -424,7 +424,7 @@ def fisher_integrands(ell_arr, zmin, zmax, cosmo, expt, cachefile, analysis_spec
                       deriv_d,
                       deriv_axfrac,
                       deriv_h]
-        paramnames = ['ln_As', 'ns', 'omega_b_0', 'omega_cdm_0', 'axfrac', 'h']
+        paramnames = ['ln_As', 'ns', 'omega_b_0', 'omega_d_0', 'axfrac', 'h']
     return DeltaCl_squared, Cl, deriv_list, paramnames
 
 
@@ -487,11 +487,7 @@ def fisher_Cl(zmin, zmax, cosmo, expt, cachefile, analysis_specifications, surve
     # Get derivative terms for Fisher matrix integrands, then perform the integrals and populate the matrix
     print('Calculate derivative terms for Fisher matrix integrands...')
 
-    if (analysis_specifications['lmax'] + 1 - analysis_specifications['lmin'] - analysis_specifications['Nl']) == 0:
-        ell_arr = np.arange(analysis_specifications['lmin'], analysis_specifications['lmax'] + 1, 1)
-    else:
-        ell_arr = np.logspace(np.log10(analysis_specifications['lmin']), np.log10(analysis_specifications['lmax']),
-                              analysis_specifications['Nl']).astype(int)
+    ell_arr = np.arange(analysis_specifications['lmin'], analysis_specifications['lmax'] + 1, 1)
     # Consistency check: Is kmax in axionCAMB set higher than the maximum range which will be tested?
     rr = comoving_distance(z=0.5 * (zmax + zmin), om_m=cosmo['omega_M_0'])
     if verbos >= 1:

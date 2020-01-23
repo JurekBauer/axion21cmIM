@@ -27,6 +27,5 @@ M_max =            17
 N_mass_mesh =      2000
 lmin = 1
 lmax = 1000
-Nl = 1000
 CAMB_kmax = 40.
 transfer_k_perlogint = 10

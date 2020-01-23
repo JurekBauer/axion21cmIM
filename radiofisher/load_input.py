@@ -26,8 +26,6 @@ def load_cosmology_input(file):
             analysis_dic['lmax'] = eval(line[1].strip())
         elif line[0].strip() == 'lmin':
             analysis_dic['lmin'] = eval(line[1].strip())
-        elif line[0].strip() == 'Nl':
-            analysis_dic['Nl'] = eval(line[1].strip())
         elif line[0].strip() == 'CAMB_kmax':
             analysis_dic['CAMB_kmax'] = eval(line[1].strip())
         elif line[0].strip() == 'transfer_k_perlogint':

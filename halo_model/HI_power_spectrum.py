@@ -4,7 +4,7 @@ import radiofisher as rf
 from HI_density_profile import *
 from hydrogen_halo_mass_relation import *
 
-verbos = 1
+verbos = 0
 
 
 def mean_hydrogen_density(M_arr, dn_dlnM_arr, relation, plot_integrand=True, log_integration=True,
@@ -20,8 +20,8 @@ def mean_hydrogen_density(M_arr, dn_dlnM_arr, relation, plot_integrand=True, log
     if log_integration:
         assert (abs(np.log(M_arr[1] / M_arr[0]) - np.log(M_arr[-1] / M_arr[-2])) < 1e-6), \
             '''
-            Caution: You applied an integration scheme, which works on an equidistant array of ln(k). 
-            However, the k_arr you passed has first ln difference k_arr: %.5f and last ln difference in k_arr: %.5f
+            Caution: You applied an integration scheme, which works on an equidistant array of ln(M). 
+            However, the M_arr you passed has first ln difference M_arr: %.5f and last ln difference in M_arr: %.5f
             ''' % (np.log(M_arr[1] / M_arr[0]), np.log(M_arr[-1] / M_arr[-2]))
     assert len(dn_dlnM_arr) == len(M_arr), \
         '''
@@ -65,12 +65,12 @@ def PS_one_halo_term(k_arr, z, M_arr, dn_dlnM_arr, omega_0, omega_m, omega_lambd
     if log_integration:
         assert (abs(np.log(M_arr[1] / M_arr[0]) - np.log(M_arr[-1] / M_arr[-2])) < 1e-6), \
             '''
-            Caution: You applied an integration scheme, which works on an equidistant array of ln(k). 
-            However, the k_arr you passed has first ln difference k_arr: %.5f and last ln difference in k_arr: %.5f
+            Caution: You applied an integration scheme, which works on an equidistant array of ln(M). 
+            However, the M_arr you passed has first ln difference M_arr: %.5f and last ln difference in M_arr: %.5f
             ''' % (np.log(M_arr[1] / M_arr[0]), np.log(M_arr[-1] / M_arr[-2]))
     assert len(dn_dlnM_arr) == len(M_arr), \
         '''
-        Length of dn_dlnM and M arrays are not equal. Something went wrong here. You need to get your problems solved! ;)
+        Length of dn_dlnM and M arrays are not equal. Something went wrong here.
         '''
     M_HI_arr = hydrogen_halo_mass_relation(M=M_arr, equation=relation, **relation_specific_args)
     integrand_arr = M_HI_arr ** 2 * dn_dlnM_arr * \
@@ -153,11 +153,9 @@ def hydrogen_powerspectrum(k_arr, z, powerspec_dic, cosmo, analysis_specificatio
     dict_key = rf.get_dict_key(cosmo['components_for_P'])  # powerspec_dic['dictionary_key']
     PS_arr = powerspec_dic['PS_' + dict_key]
     # Interpolate the power spectrum
-    P_interpolated = scipy.interpolate.interp1d(powerspec_dic['k'], PS_arr,
-                                                kind='quadratic',
-                                                bounds_error=False,
-                                                # fill_value='extrapolate')
-                                                fill_value=0.)
+    _P_interpolated = scipy.interpolate.interp1d(np.log(powerspec_dic['k']), np.log(PS_arr),
+                                        kind='quadratic', bounds_error=False)
+    P_interpolated = lambda x: np.exp(_P_interpolated(np.log(x)))
     # Omega_0, depending on the components to be included
     omega_comps = powerspec_dic['omega_%s_0' % dict_key]
     # Get HMF dictionary, including the HMF and sigma
