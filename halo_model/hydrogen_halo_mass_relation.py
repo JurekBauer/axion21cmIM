@@ -102,6 +102,6 @@ def hydrogen_halo_mass_relation(M, equation, **args):
         return padmanabhan_refregier_relation(M, **args)
     else:
         print('''
-        You specified an unknown helium halo mass relation. Maybe you should implement it. 
+        You specified an unknown hydrogen halo mass relation. Maybe you should implement it. 
         Currently implemented are \'Bull\' and \'PRA2017\'. 
         ''')
