@@ -27,7 +27,7 @@ def mean_hydrogen_density(M_arr, dn_dlnM_arr, relation, plot_integrand=True, log
         '''
         Length of dn_dlnM and M arrays are not equal. Something went wrong here. You need to get your problems solved! ;)
         '''
-    M_HI_arr = helium_halo_mass_relation(M=M_arr, equation=relation, **relation_specific_args)
+    M_HI_arr = hydrogen_halo_mass_relation(M=M_arr, equation=relation, **relation_specific_args)
     integrand_arr = M_HI_arr * dn_dlnM_arr
     if plot_integrand:
         plt.plot(M_arr, integrand_arr)
@@ -72,7 +72,7 @@ def PS_one_halo_term(k_arr, z, M_arr, dn_dlnM_arr, omega_0, omega_m, omega_lambd
         '''
         Length of dn_dlnM and M arrays are not equal. Something went wrong here. You need to get your problems solved! ;)
         '''
-    M_HI_arr = helium_halo_mass_relation(M=M_arr, equation=relation, **relation_specific_args)
+    M_HI_arr = hydrogen_halo_mass_relation(M=M_arr, equation=relation, **relation_specific_args)
     integrand_arr = M_HI_arr ** 2 * dn_dlnM_arr * \
                     np.abs(hydrogen_density_profile_kspace(k_arr=k_arr, M_arr=M_arr, z=z, om_0=omega_0, om_m=omega_m,
                                                            om_l=omega_lambda, c_HI0=c_HI0, gamma=gamma, h=hubble)) ** 2
@@ -115,7 +115,7 @@ def HI_bias(k_arr, z, M_arr, dn_dlnM_arr, sigma_arr, omega_0, omega_m, omega_lam
         '''
         Length of dn_dlnM and M arrays are not equal. Something went wrong here. You need to get your problems solved! ;)
         '''
-    M_HI_arr = helium_halo_mass_relation(M=M_arr, equation=relation, **relation_specific_args)
+    M_HI_arr = hydrogen_halo_mass_relation(M=M_arr, equation=relation, **relation_specific_args)
     integrand_arr = M_HI_arr * dn_dlnM_arr * sheth_tormen_halo_bias(sigma=sigma_arr) * \
                     np.abs(hydrogen_density_profile_kspace(k_arr=k_arr, M_arr=M_arr, z=z, om_0=omega_0, om_m=omega_m,
                                                            om_l=omega_lambda, c_HI0=c_HI0,

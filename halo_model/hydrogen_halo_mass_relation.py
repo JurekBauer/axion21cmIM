@@ -46,7 +46,7 @@ def bagla_et_al_relation(M, f3, redshift, h, vmin=30, vmax=200):
     return np.where(M >= M_min, term, 0.0)
 
 
-def helium_halo_mass_relation(M, equation, **args):
+def hydrogen_halo_mass_relation(M, equation, **args):
     '''
     Returns the HI mass as a function of halo mass, M_HI(M), depending on the specific relation given, in M_sun/h
 
