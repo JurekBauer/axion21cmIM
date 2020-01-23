@@ -16,7 +16,7 @@ EXP_OVERFLOW_VAL = 250.  # Max. value of exponent for np.exp() before assuming o
 INF_NOISE = 1e200 # Very large finite no. used to denote infinite noise
 
 # Location of CAMB executable
-CAMB_EXEC = '/home/jurek/Dropbox/Master thesis/axionCAMB'
+CAMB_EXEC = '/home/jurek/Dropbox/axionCAMB'
 # CAMB_EXEC = '/usr/users/jbauer5/bin/axionCAMB'
 
 
@@ -381,7 +381,7 @@ def fisher_integrands(ell_arr, zmin, zmax, cosmo, expt, cachefile, analysis_spec
     deriv_ns_num, delta_ns = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                            analysis_specifications=analysis_specifications, cosmo=cosmo,
                                            deriv_opt='ns', cachefile_fid=cachefile)
-    print('fisher_integrands(): Calculating derivative wrt to omega_CDM numerically...')
+    print('fisher_integrands(): Calculating derivative wrt to omega_d numerically...')
     deriv_d, delta_d = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                      analysis_specifications=analysis_specifications, cosmo=cosmo,
                                      deriv_opt='omega_d', cachefile_fid=cachefile)
@@ -389,7 +389,7 @@ def fisher_integrands(ell_arr, zmin, zmax, cosmo, expt, cachefile, analysis_spec
     deriv_axfrac, delta_axfrac = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                                analysis_specifications=analysis_specifications, cosmo=cosmo,
                                                deriv_opt='axfrac', cachefile_fid=cachefile)
-    print('fisher_integrands(): Calculating derivative wrt to omega_baryon numerically...')
+    print('fisher_integrands(): Calculating derivative wrt to omega_b numerically...')
     deriv_b, delta_b = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                      analysis_specifications=analysis_specifications, cosmo=cosmo,
                                      deriv_opt='omega_b', cachefile_fid=cachefile)
@@ -701,7 +701,7 @@ def convert_to_camb(cosmo):
     p['scalar_spectral_index__1___'] = cosmo['ns']
     p['scalar_amp__1___'] = cosmo['As']
     p['pivot_scalar'] = cosmo['k_piv']
-    p['omaxh2'] = cosmo['omega_ax_0'] * cosmo['h'] ** 2. + 1e-6  # +1e-6 to make sure to have a non-zero value
+    p['omaxh2'] = cosmo['omega_ax_0'] * cosmo['h'] ** 2. + 1e-10  # +1e-10 to make sure to have a non-zero value
     p['m_ax'] = 10.0 ** cosmo['ma']
     return p
 

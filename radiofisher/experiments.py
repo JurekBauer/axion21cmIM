@@ -1,35 +1,6 @@
 from units import *
 import numpy as np
 
-# Define fiducial cosmology and parameters (not needed if input file is specified)
-cosmo_dictionary = {
-    # Cosmological parameters from Hlozek et al. (2017) "Future CMB tests...".
-    'omega_M_0': (0.1197 + 0.02222 + 0.06 / 93.14) / 0.69 ** 2.,
-    'omega_lambda_0': 1.0 - (0.1197 + 0.02222 + 0.06 / 93.14) / 0.69 ** 2.,  # 0.72,
-    'omega_cdm_0': 0.1197 / 0.69 ** 2. * (1.0 - 0.02),
-    'omega_b_0': 0.02222 / 0.69 ** 2.,
-    'omega_ax_0': 0.02 * 0.1197 / 0.69 ** 2.,
-    'ma': -28,
-    'h': 0.69,
-    'ns': 0.9655,
-    'As': 2.1955e-9,
-    'mnu': 0.06,
-    'omega_HI_0': 2.45e-4 / 0.69,  # 4.86e-4, #6.50e-4,
-    'k_piv': 0.05,  # n_s
-    # components for the calculation of the power spectrum, total matter power spectrum will be loaded anyways.
-    'components_for_P': ('CDM', 'baryon'),  # ('total',), #
-    # range and number of mesh points in between for the halo mass, in order to calculate the HI bias or omega_HI
-    'M_min': 8,
-    'M_max': 17,
-    'N_mass_mesh': 2000,
-    # which M_HI-M relation to use and additional arguments for the relation
-    'HI_halo_formula': 'PRA2017',
-    'HI_halo_formula_args': {'alpha': 0.09, 'beta': -0.58, 'vc0': 10 ** 1.56},
-    'gamma_HI': 1.45,
-    'c_HI0': 28.65,
-    'sigma_8': 0.811,
-}
-
 SURVEY = {
     'ttot': 10e3 * HRS_MHZ,  # Total integration time [MHz^-1]
     'nu_line': 1420.406,  # Rest-frame freq. of emission line [MHz]
