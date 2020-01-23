@@ -184,22 +184,22 @@ def hydrogen_powerspectrum(k_arr, z, powerspec_dic, cosmo, analysis_specificatio
         cosmo['HI_halo_formula_args']['redshift'] = z
         cosmo['HI_halo_formula_args']['om_comps'] = omega_comps
         cosmo['HI_halo_formula_args']['om_b'] = cosmo['omega_b_0']
-        cosmo['HI_halo_formula_args']['om_m'] = cosmo['omega_M_0']
-        cosmo['HI_halo_formula_args']['om_lambda'] = cosmo['omega_lambda_0']
+        cosmo['HI_halo_formula_args']['om_m'] = rf.get_omega_M(cosmo=cosmo)
+        cosmo['HI_halo_formula_args']['om_lambda'] = rf.get_omega_lambda(cosmo=cosmo)
         cosmo['HI_halo_formula_args']['alpha'] = 1.0
         alpha = cosmo['omega_HI_0'] * rho_critical_at_redshift_zero() / \
                 mean_hydrogen_density(M_arr=hmf_dictionary['M'], dn_dlnM_arr=hmf_dictionary['dn_dlnM'],
                                       relation=cosmo['HI_halo_formula'],
                                       plot_integrand=False, log_integration=True,
                                       **cosmo['HI_halo_formula_args'])
-        print('alpha in HI halo mass relation = %f' % alpha)
+        print('\talpha in HI halo mass relation = %f' % alpha)
         cosmo['HI_halo_formula_args']['alpha'] = alpha
 
     hydrogen_powerspec_one = PS_one_halo_term(k_arr=k_arr,
                                               z=z, M_arr=M_arr,
                                               dn_dlnM_arr=hmf_dictionary['dn_dlnM'],
-                                              omega_lambda=cosmo['omega_lambda_0'],
-                                              omega_m=cosmo['omega_M_0'],
+                                              omega_lambda=rf.get_omega_lambda(cosmo=cosmo),
+                                              omega_m=rf.get_omega_M(cosmo=cosmo),
                                               omega_0=omega_comps,
                                               hubble=cosmo['h'],
                                               c_HI0=cosmo['c_HI0'],
@@ -212,9 +212,9 @@ def hydrogen_powerspectrum(k_arr, z, powerspec_dic, cosmo, analysis_specificatio
                                 z=z, M_arr=M_arr,
                                 dn_dlnM_arr=hmf_dictionary['dn_dlnM'],
                                 sigma_arr=np.sqrt(hmf_dictionary['sigma_squared']),
-                                omega_lambda=cosmo['omega_lambda_0'],
+                                omega_lambda=rf.get_omega_lambda(cosmo=cosmo),
                                 omega_0=omega_comps,
-                                omega_m=cosmo['omega_M_0'],
+                                omega_m=rf.get_omega_M(cosmo=cosmo),
                                 hubble=cosmo['h'],
                                 c_HI0=cosmo['c_HI0'],
                                 gamma=cosmo['gamma_HI'],

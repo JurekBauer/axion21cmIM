@@ -1,6 +1,4 @@
 # cosmological and astrophysical parameters
-omega_M_0 = 0.29944
-omega_lambda_0 = 0.700558
 omega_b_0 = 0.046671
 axfrac = 0.02
 omega_d_0 = 0.2514178
@@ -17,7 +15,7 @@ c_HI0 =            28.65
 ma = -24
 components_for_P = ('CDM', 'baryon', 'axion')
 # experimental specifications
-experiment_number = 0
+experiment_number = 5
 ttot = 10000 #  [h]
 # analysis specifications
 noise = knox

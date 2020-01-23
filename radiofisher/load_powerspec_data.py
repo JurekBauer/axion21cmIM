@@ -96,17 +96,34 @@ def get_dict_key(comps):
     return dict_key
 
 
+def get_omega_cdm(cosmo):
+    return cosmo['omega_d_0'] * (1.0 - cosmo['axion_fraction'])
+
+
+def get_omega_M(cosmo):
+    om_m = cosmo['omega_d_0'] + cosmo['omega_b_0'] + (cosmo['mnu'] / 93.14) / cosmo['h'] ** 2
+    return om_m
+
+
+def get_omega_lambda(cosmo):
+    return 1.0 - get_omega_M(cosmo=cosmo)
+
+
+def get_omega_ax(cosmo):
+    return cosmo['axion_fraction'] * cosmo['omega_d_0']
+
+
 def get_omega_dict_key(cosmo):
     omega_dict_key = 0
     for i in cosmo['components_for_P']:
         if i == 'CDM':
-            omega = cosmo['omega_cdm_0']
+            omega = get_omega_cdm(cosmo=cosmo)
         elif i == 'baryon':
             omega = cosmo['omega_b_0']
         elif i == 'total':
-            omega = cosmo['omega_M_0']
+            omega = get_omega_M(cosmo=cosmo)
         elif i == 'axion':
-            omega = cosmo['omega_ax_0']
+            omega = get_omega_ax(cosmo=cosmo)
         else:
             print('\tUnknown component %s specified for power spectrum.' % i)
             raise KeyError

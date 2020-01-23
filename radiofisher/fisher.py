@@ -42,9 +42,9 @@ def Cl_signal(ell, z, z_min, z_max, cosmo, cachefile, analysis_specifications):
     '''
     assert z == cosmo['z'], '''z in cosmo dictionary does not agree with z passed to this function.'''
     # Hubble value H(z) in (km * h)/(s * Mpc)
-    HH = hubble_value(z=z, H0=cosmo['h'] * 100, om_m=cosmo['omega_M_0']) / cosmo['h']
+    HH = hubble_value(z=z, H0=cosmo['h'] * 100, om_m=get_omega_M(cosmo=cosmo)) / cosmo['h']
     # Comoving distance r(z) in Mpc/h
-    rr = comoving_distance(z=z, om_m=cosmo['omega_M_0'])
+    rr = comoving_distance(z=z, om_m=get_omega_M(cosmo=cosmo))
     # Effective k_arr in h/Mpc
     k = (ell + 0.5) / rr
     # Load power spectrum dictionary from axionCAMB
@@ -123,7 +123,7 @@ def Nl_noise(ell, z_min, z_max, expt, cosmo, analysis_specifications):
     '''
     z = 0.5 * (z_min + z_max)  # Center of redshift bin
     Tb = mean_brightness_temperature(z=z, cosmo_dic=cosmo)
-    print('mean brightness temperature T_b = %.3e mK' % Tb)
+    print('\tmean brightness temperature T_b = %.3e mK' % Tb)
     nu = expt['nu_line'] / (1. + z)  # Frequency of 21cm line at center of redshift bin z (MHz)
     wavelength = 3e8 / (nu * 1e6)  # Wavelength (m)
     Tsky = 60e3 * (350. / nu) ** 2.5  # Temp. of sky (mK)
@@ -175,7 +175,7 @@ def Nl_noise(ell, z_min, z_max, expt, cosmo, analysis_specifications):
         if analysis_specifications['nonlinear_cutoff']:
             print('\tNl_noise(): Cut-off non-linear scales.')
             k_nl = 0.14 / cosmo['h'] * (1.0 + z) ** (2.0/(2.0 + cosmo['ns']))
-            ell_nl = k_nl * comoving_distance(z=z, om_m=cosmo['omega_M_0'])
+            ell_nl = k_nl * comoving_distance(z=z, om_m=get_omega_M(cosmo=cosmo))
             noise[np.where(ell > ell_nl)] = INF_NOISE
         return noise
     elif expt['mode'] == 'interferometric':
@@ -211,7 +211,7 @@ def Nl_noise(ell, z_min, z_max, expt, cosmo, analysis_specifications):
         if analysis_specifications['nonlinear_cutoff']:
             print('\tNl_noise(): Cut-off non-linear scales.')
             k_nl = 0.14 / cosmo['h'] * (1.0 + z) ** (2.0/(2.0 + cosmo['ns']))
-            ell_nl = k_nl * comoving_distance(z=z, om_m=cosmo['omega_M_0'])
+            ell_nl = k_nl * comoving_distance(z=z, om_m=get_omega_M(cosmo=cosmo))
             noise[np.where(ell > ell_nl)] = INF_NOISE
         return noise
     else:
@@ -219,7 +219,15 @@ def Nl_noise(ell, z_min, z_max, expt, cosmo, analysis_specifications):
         raise IOError
 
 
-def deriv_wrapper(ell_arr, zmin, zmax, cosmo, analysis_specifications, deriv_opt, cachefile_fid):
+def deriv_wrapper(ell_arr, zmin, zmax, cosmo, analysis_specifications, deriv_opt, cachefile_fid,
+                  Delta_om_b=0.004,
+                  Delta_om_d=0.004,
+                  Delta_h=0.01,
+                  Delta_axfrac=0.005,
+                  Delta_As=1.0e-13,
+                  Delta_ns=0.0005,
+                  Delta_vc0=0.01,
+                  Delta_beta=0.003):
     '''
     Returns the numerically calculated derivative of C_ell wrt to some model parameter
     (units depending on model parameter).
@@ -246,95 +254,71 @@ def deriv_wrapper(ell_arr, zmin, zmax, cosmo, analysis_specifications, deriv_opt
     z = 0.5 * (zmin + zmax)
     file_base = 'PS_dictionaries/cache_powerspec_ma{}_axfrac_fid{}_'.format(cosmo['ma'], cosmo['axion_fraction'])
     if deriv_opt == 'omega_b':
-        Delta_om_b = 0.002 
         cosmo_Bplus = copy.deepcopy(cosmo)
         cosmo_Bminus = copy.deepcopy(cosmo)
-        cosmo_Bplus['omega_b_0'] = cosmo['omega_b_0'] + Delta_om_b
-        cosmo_Bplus['omega_M_0'] = cosmo['omega_M_0'] + Delta_om_b
-        cosmo_Bplus['omega_lambda_0'] = cosmo['omega_lambda_0'] - Delta_om_b
-        cosmo_Bminus['omega_b_0'] = cosmo['omega_b_0'] - Delta_om_b
-        cosmo_Bminus['omega_M_0'] = cosmo['omega_M_0'] - Delta_om_b
-        cosmo_Bminus['omega_lambda_0'] = cosmo['omega_lambda_0'] + Delta_om_b
+        cosmo_Bplus['omega_b_0'] += Delta_om_b
+        cosmo_Bminus['omega_b_0'] -= Delta_om_b
         cachefile_plus = file_base + 'Bplus_Delta{}_z{}.npy'.format(Delta_om_b, z)
         cachefile_minus = file_base + 'Bminus_Delta{}_z{}.npy'.format(Delta_om_b, z)
         return return_derivative(cosmo_minus=cosmo_Bminus, cosmo_plus=cosmo_Bplus,
                                  cachefile_minus=cachefile_minus, cachefile_plus=cachefile_plus, Delta=Delta_om_b)
     elif deriv_opt == 'omega_d':
-        Delta_om_d = 0.002 
         cosmo_Dplus = copy.deepcopy(cosmo)
         cosmo_Dminus = copy.deepcopy(cosmo)
-        cosmo_Dplus['omega_d_0'] = cosmo['omega_d_0'] + Delta_om_d
-        cosmo_Dplus['omega_M_0'] = cosmo['omega_M_0'] + Delta_om_d
-        cosmo_Dplus['omega_ax_0'] = cosmo['axion_fraction'] * (cosmo['omega_d_0'] + Delta_om_d)
-        cosmo_Dplus['omega_cdm_0'] = (cosmo['omega_d_0'] + Delta_om_d) * (1.0 - cosmo['axion_fraction'])
-        cosmo_Dplus['omega_lambda_0'] = cosmo['omega_lambda_0'] - Delta_om_d
-        cosmo_Dminus['omega_d_0'] = cosmo['omega_d_0'] - Delta_om_d
-        cosmo_Dminus['omega_M_0'] = cosmo['omega_M_0'] - Delta_om_d
-        cosmo_Dminus['omega_ax_0'] = cosmo['axion_fraction'] * (cosmo['omega_d_0'] - Delta_om_d)
-        cosmo_Dminus['omega_cdm_0'] = (cosmo['omega_d_0'] - Delta_om_d) * (1.0 - cosmo['axion_fraction'])
-        cosmo_Dminus['omega_lambda_0'] = cosmo['omega_lambda_0'] + Delta_om_d
+        cosmo_Dplus['omega_d_0'] += Delta_om_d
+        cosmo_Dminus['omega_d_0'] -= Delta_om_d
         cachefile_plus = file_base + 'Dplus_Delta{}_z{}.npy'.format(Delta_om_d, z)
         cachefile_minus = file_base + 'Dminus_Delta{}_z{}.npy'.format(Delta_om_d, z)
         return return_derivative(cosmo_minus=cosmo_Dminus, cosmo_plus=cosmo_Dplus,
                                  cachefile_minus=cachefile_minus, cachefile_plus=cachefile_plus, Delta=Delta_om_d)
     elif deriv_opt == 'hubble':
-        Delta_h = 0.01  
         cosmo_Hplus = copy.deepcopy(cosmo)
         cosmo_Hminus = copy.deepcopy(cosmo)
-        cosmo_Hplus['h'] = cosmo['h'] + Delta_h
-        cosmo_Hminus['h'] = cosmo['h'] - Delta_h
+        cosmo_Hplus['h'] += Delta_h
+        cosmo_Hminus['h'] -= Delta_h
         cachefile_plus = file_base + 'Hplus_Delta{}_z{}.npy'.format(Delta_h, z)
         cachefile_minus = file_base + 'Hminus_Delta{}_z{}.npy'.format(Delta_h, z)
         return return_derivative(cosmo_minus=cosmo_Hminus, cosmo_plus=cosmo_Hplus,
                                  cachefile_minus=cachefile_minus, cachefile_plus=cachefile_plus, Delta=Delta_h)
     elif deriv_opt == 'axfrac':
-        Delta_axfrac = 0.0005
         cosmo_Aplus = copy.deepcopy(cosmo)
         cosmo_Aminus = copy.deepcopy(cosmo)
-        cosmo_Aplus['axion_fraction'] = cosmo['axion_fraction'] + Delta_axfrac
-        cosmo_Aplus['omega_ax_0'] = cosmo_Aplus['axion_fraction'] * cosmo['omega_d_0']
-        cosmo_Aplus['omega_cdm_0'] = cosmo['omega_d_0'] * (1.0 - cosmo_Aplus['axion_fraction'])
-        cosmo_Aminus['axion_fraction'] = cosmo['axion_fraction'] - Delta_axfrac
-        cosmo_Aminus['omega_ax_0'] = cosmo_Aminus['axion_fraction'] * cosmo['omega_d_0']
-        cosmo_Aminus['omega_cdm_0'] = cosmo['omega_d_0'] * (1.0 - cosmo_Aminus['axion_fraction'])
+        cosmo_Aplus['axion_fraction'] += Delta_axfrac
+        cosmo_Aminus['axion_fraction'] -= Delta_axfrac
         cachefile_plus = file_base + 'Aplus_Delta{}_z{}.npy'.format(Delta_axfrac, z)
         cachefile_minus = file_base + 'Aminus_Delta{}_z{}.npy'.format(Delta_axfrac, z)
         return return_derivative(cosmo_minus=cosmo_Aminus, cosmo_plus=cosmo_Aplus,
                                  cachefile_minus=cachefile_minus, cachefile_plus=cachefile_plus, Delta=Delta_axfrac)
     elif deriv_opt == 'As':
-        Delta_As = 1.0e-13 
         cosmo_Asplus = copy.deepcopy(cosmo)
         cosmo_Asminus = copy.deepcopy(cosmo)
-        cosmo_Asplus['As'] = cosmo['As'] + Delta_As
-        cosmo_Asminus['As'] = cosmo['As'] - Delta_As
+        cosmo_Asplus['As'] += Delta_As
+        cosmo_Asminus['As'] -= Delta_As
         cachefile_plus = file_base + 'Asplus_Delta{}_z{}.npy'.format(Delta_As, z)
         cachefile_minus = file_base + 'Asminus_Delta{}_z{}.npy'.format(Delta_As, z)
         return return_derivative(cosmo_minus=cosmo_Asminus, cosmo_plus=cosmo_Asplus,
                                  cachefile_minus=cachefile_minus, cachefile_plus=cachefile_plus, Delta=Delta_As)
     elif deriv_opt == 'ns':
-        Delta_ns = 0.0005  
         cosmo_nsplus = copy.deepcopy(cosmo)
         cosmo_nsminus = copy.deepcopy(cosmo)
-        cosmo_nsplus['ns'] = cosmo['ns'] + Delta_ns
-        cosmo_nsminus['ns'] = cosmo['ns'] - Delta_ns
+        cosmo_nsplus['ns'] += Delta_ns
+        cosmo_nsminus['ns'] -= Delta_ns
         cachefile_plus = file_base + 'nsplus_Delta{}_z{}.npy'.format(Delta_ns, z)
         cachefile_minus = file_base + 'nsminus_Delta{}_z{}.npy'.format(Delta_ns, z)
         return return_derivative(cosmo_minus=cosmo_nsminus, cosmo_plus=cosmo_nsplus,
                                  cachefile_minus=cachefile_minus, cachefile_plus=cachefile_plus, Delta=Delta_ns)
     elif deriv_opt == 'vc0':
-        Delta_vc0 = 0.01
         cosmo_vc0plus = copy.deepcopy(cosmo)
         cosmo_vc0minus = copy.deepcopy(cosmo)
-        cosmo_vc0plus['HI_halo_formula_args']['vc0'] = cosmo['HI_halo_formula_args']['vc0'] + Delta_vc0
-        cosmo_vc0minus['HI_halo_formula_args']['vc0'] = cosmo['HI_halo_formula_args']['vc0'] - Delta_vc0
+        cosmo_vc0plus['HI_halo_formula_args']['vc0'] += Delta_vc0
+        cosmo_vc0minus['HI_halo_formula_args']['vc0'] -= Delta_vc0
         return return_derivative(cosmo_minus=cosmo_vc0minus, cosmo_plus=cosmo_vc0plus,
                                  cachefile_minus=cachefile_fid, cachefile_plus=cachefile_fid, Delta=Delta_vc0)
     elif deriv_opt == 'beta':
-        Delta_beta = 0.003
         cosmo_betaplus = copy.deepcopy(cosmo)
         cosmo_betaminus = copy.deepcopy(cosmo)
-        cosmo_betaplus['HI_halo_formula_args']['beta'] = cosmo['HI_halo_formula_args']['beta'] + Delta_beta
-        cosmo_betaminus['HI_halo_formula_args']['beta'] = cosmo['HI_halo_formula_args']['beta'] - Delta_beta
+        cosmo_betaplus['HI_halo_formula_args']['beta'] += Delta_beta
+        cosmo_betaminus['HI_halo_formula_args']['beta'] -= Delta_beta
         return return_derivative(cosmo_minus=cosmo_betaminus, cosmo_plus=cosmo_betaplus,
                                  cachefile_minus=cachefile_fid, cachefile_plus=cachefile_fid, Delta=Delta_beta)
     else:
@@ -373,36 +357,36 @@ def fisher_integrands(ell_arr, zmin, zmax, cosmo, expt, cachefile, analysis_spec
     f_sky = expt['Sarea'] / (4 * np.pi)
     DeltaCl_squared = 2.0 / ((2.0 * ell_arr + 1.0) * f_sky) * (Cl + Nl) ** 2
 
-    print('fisher_integrands(): Calculating derivative wrt to As numerically...')
+    print('fisher_integrands(): Calculating derivative wrt to **As** numerically...')
     deriv_As_num, delta_As = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                            analysis_specifications=analysis_specifications, cosmo=cosmo,
                                            deriv_opt='As', cachefile_fid=cachefile)
-    print('fisher_integrands(): Calculating derivative wrt to ns numerically...')
+    print('fisher_integrands(): Calculating derivative wrt to **ns** numerically...')
     deriv_ns_num, delta_ns = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                            analysis_specifications=analysis_specifications, cosmo=cosmo,
                                            deriv_opt='ns', cachefile_fid=cachefile)
-    print('fisher_integrands(): Calculating derivative wrt to omega_d numerically...')
+    print('fisher_integrands(): Calculating derivative wrt to **omega_d** numerically...')
     deriv_d, delta_d = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                      analysis_specifications=analysis_specifications, cosmo=cosmo,
                                      deriv_opt='omega_d', cachefile_fid=cachefile)
-    print('fisher_integrands(): Calculating derivative wrt to axion fraction numerically...')
+    print('fisher_integrands(): Calculating derivative wrt to **axion fraction** numerically...')
     deriv_axfrac, delta_axfrac = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                                analysis_specifications=analysis_specifications, cosmo=cosmo,
                                                deriv_opt='axfrac', cachefile_fid=cachefile)
-    print('fisher_integrands(): Calculating derivative wrt to omega_b numerically...')
+    print('fisher_integrands(): Calculating derivative wrt to **omega_b** numerically...')
     deriv_b, delta_b = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                      analysis_specifications=analysis_specifications, cosmo=cosmo,
                                      deriv_opt='omega_b', cachefile_fid=cachefile)
-    print('fisher_integrands(): Calculating derivative wrt to h numerically...')
+    print('fisher_integrands(): Calculating derivative wrt to **h** numerically...')
     deriv_h, delta_h = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                      analysis_specifications=analysis_specifications, cosmo=cosmo,
                                      deriv_opt='hubble', cachefile_fid=cachefile)
     if cosmo['HI_halo_formula'] == 'PRA2017':
-        print('fisher_integrands(): Calculating derivative wrt to vc0 numerically...')
+        print('fisher_integrands(): Calculating derivative wrt to **vc0** numerically...')
         deriv_vc0, delta_vc0 = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                              analysis_specifications=analysis_specifications,
                                              cosmo=cosmo, deriv_opt='vc0', cachefile_fid=cachefile)
-        print('fisher_integrands(): Calculating derivative wrt to beta numerically...')
+        print('fisher_integrands(): Calculating derivative wrt to **beta** numerically...')
         deriv_beta, delta_beta = deriv_wrapper(ell_arr=ell_arr, zmin=zmin, zmax=zmax,
                                                analysis_specifications=analysis_specifications,
                                                cosmo=cosmo, deriv_opt='beta', cachefile_fid=cachefile)
@@ -489,7 +473,7 @@ def fisher_Cl(zmin, zmax, cosmo, expt, cachefile, analysis_specifications, surve
 
     ell_arr = np.arange(analysis_specifications['lmin'], analysis_specifications['lmax'] + 1, 1)
     # Consistency check: Is kmax in axionCAMB set higher than the maximum range which will be tested?
-    rr = comoving_distance(z=0.5 * (zmax + zmin), om_m=cosmo['omega_M_0'])
+    rr = comoving_distance(z=0.5 * (zmax + zmin), om_m=get_omega_M(cosmo=cosmo))
     if verbos >= 1:
         print(
             "\tSanity check:\n\t\tCalculated P(k,z) from axionCAMB goes up to %3.2f h/Mpc, maximum l/r(z) is %3.2f h/Mpc." %
@@ -504,9 +488,6 @@ def fisher_Cl(zmin, zmax, cosmo, expt, cachefile, analysis_specifications, surve
                                                             analysis_specifications=analysis_specifications)
     print('Done.')
     F = integrate_fisher_elements(derivs=derivs, DeltaCl_squared_arr=deltacl_arr)
-    print('*' * 50 + ' F for redshift bin %.4f ' % (0.5 * (zmax + zmin)) + 50 * '*')
-    print(np.array(F))
-
     # Return results
     return F, paramnames, deltacl_arr, Cl, ell_arr
 
@@ -549,7 +530,8 @@ def load_power_spectrum(cosmo, analysis_specifications, cachefile,
     print("\tload_power_spectrum(): Loading matter P(k)...")
     powerspec_dic = cached_camb_output(p=p, cachefile=cachefile, cosmo=cosmo,
                                        force=force, force_load=force_load)
-    sigma8_computed = np.sqrt(hm.sigma_R(R=8.0, k_arr=powerspec_dic['k'], PS_arr=powerspec_dic['PS_total']))
+    sigma8_computed = np.sqrt(hm.sigma_R(R=8.0, k_arr=powerspec_dic['k'], PS_arr=powerspec_dic['PS_total'],
+                                         scipy_opt=False))
     print('\t\tsigma8 with PS_total from transfer function:\t%f' % sigma8_computed)
     return powerspec_dic
 
@@ -573,10 +555,10 @@ def mean_brightness_temperature(z, cosmo_dic, formula=''):
     elif formula == 'chang':
         Tb = 0.3 * (omegaHI / 1e-3) * np.sqrt(0.29 * (1. + z) ** 3.)
         Tb *= np.sqrt((1. + z) / 2.5)
-        Tb /= np.sqrt(cosmo_dic['omega_M_0'] * (1. + z) ** 3. + cosmo_dic['omega_lambda_0'])
+        Tb /= np.sqrt(get_omega_M(cosmo=cosmo_dic) * (1. + z) ** 3. + get_omega_lambda(cosmo=cosmo_dic))
     else:
-        om = cosmo_dic['omega_M_0']
-        ol = cosmo_dic['omega_lambda_0']
+        om = get_omega_M(cosmo=cosmo_dic)
+        ol = get_omega_lambda(cosmo=cosmo_dic)
         E = hm.efunc(z=z, om_m=om, om_v=ol, om_k=0, om_r=0)
         Tb = 190. * cosmo_dic['h'] * omegaHI * (1. + z) ** 2. / E
     return Tb
@@ -691,13 +673,13 @@ def convert_to_camb(cosmo):
     p = {}
     p['transfer_redshift__1___'] = cosmo['z']
     p['hubble'] = 100. * cosmo['h']
-    p['omch2'] = cosmo['omega_cdm_0'] * cosmo['h'] ** 2.
+    p['omch2'] = get_omega_cdm(cosmo=cosmo) * cosmo['h'] ** 2.
     p['ombh2'] = cosmo['omega_b_0'] * cosmo['h'] ** 2.
-    p['omk'] = 0.0  # 1. - (cosmo['omega_M_0'] + cosmo['omega_lambda_0'])
+    p['omk'] = 0.0  # 1. - (omega_M + omega_Lambda)
     p['scalar_spectral_index__1___'] = cosmo['ns']
     p['scalar_amp__1___'] = cosmo['As']
     p['pivot_scalar'] = cosmo['k_piv']
-    p['omaxh2'] = cosmo['omega_ax_0'] * cosmo['h'] ** 2. + 1e-10  # +1e-10 to make sure to have a non-zero value
+    p['omaxh2'] = get_omega_ax(cosmo=cosmo) * cosmo['h'] ** 2. + 1e-10  # +1e-10 to make sure to have a non-zero value
     p['m_ax'] = 10.0 ** cosmo['ma']
     return p
 

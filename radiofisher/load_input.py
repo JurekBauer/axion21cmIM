@@ -33,15 +33,13 @@ def load_cosmology_input(file):
         elif line[0].strip() == 'nonlinear_cutoff':
             analysis_dic['nonlinear_cutoff'] = eval(line[1].strip())        
         elif line[0].strip() == 'axfrac':
-            axfrac = eval(line[1].strip())
+            cosmo_dic['axion_fraction'] = eval(line[1].strip())
+            # axfrac = eval(line[1].strip())
         elif line[0].strip() == 'omega_d_0':
-            omega_d_0 = eval(line[1].strip())
+            cosmo_dic['omega_d_0'] = eval(line[1].strip())
+            # omega_d_0 = eval(line[1].strip())
         elif line[0].split()[0] == '#':
             continue
         else:
             cosmo_dic[line[0].strip()] = eval(line[1].strip())
-    cosmo_dic['axion_fraction'] = axfrac
-    cosmo_dic['omega_ax_0'] = axfrac * omega_d_0
-    cosmo_dic['omega_d_0'] = omega_d_0
-    cosmo_dic['omega_cdm_0'] = (1.0 - axfrac) * omega_d_0
     return expt_dic, analysis_dic, cosmo_dic
