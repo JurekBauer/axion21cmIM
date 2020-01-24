@@ -69,24 +69,24 @@ def hydrogen_halo_mass_relation(M, equation, **args):
         You specified the HI-halo mass relation from Padmanabhan, Refregier and Amara 2017 paper.
         Your keyword arguments which will be passed to this function are: %r
         ''' % args)
-        if plot_Fig6:
+        if plot_Fig6:  # plots Fig6 of arXiv:1611:1611.06235
             M_arr = np.logspace(10, 15, 100)
-            h = args['h']
+            h = 0.69  # assuming h = 0.69 is fiducial value
             om_comps = args['om_comps']
             om_b = args['om_b']
             om_m = args['om_m']
             om_lambda = args['om_lambda']
-            alpha = args['alpha']
-            beta = args['beta']
-            vc0 = args['vc0']
+            alpha = 0.09
+            beta = -0.58
+            vc0 = 10 ** 1.56
             colors = ['royalblue', 'g', 'tomato', 'c', 'mediumvioletred']
             f = plt.figure()
             f.set_size_inches(8, 8)
             ax = f.add_subplot(111)
             for i in range(0, 5):
-                M_HI_arr = padmanabhan_refregier_relation(M=M_arr * h, om_b=om_b, om_comps=om_comps, om_m=om_m,
+                M_HI_arr = padmanabhan_refregier_relation(M=M_arr * h, om_b=om_b, om_comps=om_m, om_m=om_m,
                                                           om_lambda=om_lambda,
-                                                          redshift=i, h=h, alpha=alpha, beta=beta, vc0=vc0)
+                                                          redshift=i, alpha=alpha, beta=beta, vc0=vc0)
                 plt.plot(M_arr, M_HI_arr / h, label=r'$z = %i$' % i, c=colors[i], lw=2)
             plt.legend(loc='lower right')
             ax.set_xlim(1e10, 1e15)
