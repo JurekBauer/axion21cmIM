@@ -108,8 +108,8 @@ def HI_bias(k_arr, z, M_arr, dn_dlnM_arr, sigma_arr, omega_0, omega_m, omega_lam
     if log_integration:
         assert (abs(np.log(M_arr[1] / M_arr[0]) - np.log(M_arr[-1] / M_arr[-2])) < 1e-6), \
             '''
-            Caution: You applied an integration scheme, which works on an equidistant array of ln(k). 
-            However, the k_arr you passed has first ln difference k_arr: %.5f and last ln difference in k_arr: %.5f
+            Caution: You applied an integration scheme, which works on an equidistant array of ln(M). 
+            However, the M_arr you passed has first ln difference M_arr: %.5f and last ln difference in M_arr: %.5f
             ''' % (np.log(M_arr[1] / M_arr[0]), np.log(M_arr[-1] / M_arr[-2]))
     assert len(dn_dlnM_arr) == len(M_arr), \
         '''

@@ -655,9 +655,9 @@ def cached_camb_output(p, cachefile, cosmo,
                                              test_PS_plotting=False)
     # Save data to file, adding hash to library
     if verbos >= 1: print(
-        "\tcached_camb_output(): Saving powerspec_dictionary to %s including the hash for identification.\n"
-        "\tpowerspec_dictionary includes all important quantities for calculating hmf and so on \n"
-        "\t(e.g. transfer functions, power spectras, growth rate)" % cachefile)
+        '\tcached_camb_output(): Saving powerspec_dictionary to %s including the hash for identification.\n'
+        '\tpowerspec_dictionary includes all important quantities for calculating hmf and so on \n'
+        '\t(e.g. transfer functions, power spectras, growth rate)' % cachefile)
     omega_dict_key_string = 'omega_%s_0' % get_dict_key(comps=cosmo['components_for_P'])
     powerspec_dic[omega_dict_key_string] = get_omega_dict_key(cosmo)
     powerspec_dic['hash'] = in_hash
