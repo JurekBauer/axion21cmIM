@@ -17,7 +17,7 @@ def camb_params(params_fname,
                 l_max_tensor=1500, k_eta_max_tensor=3000, use_physical='T',
                 ombh2=0.0224, omch2=0.12, omnuh2=0, omk=0, hubble=67.4,
                 axion_isocurvature='F', Hinf=14,
-                w=-1, wa=0, use_axfrac='F', omaxh2=0.00000001, m_ax=1.e-27,
+                w=-1, use_axfrac='F', omaxh2=0.00000001, m_ax=1.e-27,
                 use_tabulated_w='F', wafile='wa.dat',
                 cs2_lam=1, temp_cmb=2.726, helium_fraction=0.24,
                 massless_neutrinos=3.046, massive_neutrinos=0,
@@ -59,9 +59,6 @@ def camb_params(params_fname,
                 accuracy_boost=1, l_accuracy_boost=1, l_sample_boost=1):
     """
     Define a dictionary of all parameters in CAMB, set to their default values.
-    
-    (N.B. Can only use 'wa' and related parameters if you compile CAMB with 
-    equations_ppf.)
     """
     # Get dict. of arguments 
     args = locals()
