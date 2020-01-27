@@ -7,12 +7,14 @@ It is recommended to run this code with the `mpi4py`-package if one is intereste
 
 Generally, the code works as follows:  
 
-  1. An input file needs to be passed to the full_experiment_inifile.py, containing all the relevant information: the fiducial cosmological and astrophysical parameters (except N_eff = 3.046, which is hard-coded), as well as the experimental and analysis specifications (except \Delta_z, which is hard-coded). 
+  1. An input file needs to be passed to the full_experiment_inifile.py, containing all the relevant information: the fiducial cosmological and astrophysical parameters (except N_eff = 3.046, which is hard-coded), as well as the experimental and analysis specifications (except \Delta_z = 0.05, which is hard-coded). You find an example input file in the repository.  
 This input file is read in as dictionaries, called `cosmo` for the cosmological parameters, while the experimental and analysis specifications are contained in the `expt` and `analysis_specifications` dictionary, respectively.  
   2. Secondly, the redshift range of the survey is divided into redshift bins with width \Delta z and the Fisher matrix for each redshift bin is calculated. Since each redshift bin is independent of the other (in the Limber approximation), this procedure was allowed to be run in parallel.
   3. Thirdly, the resulting Fisher matrix for the redshift bin is saved, as well as the fiducial C_\ell and \Delta C_\ell.  
 
 The sketch visualizes the pipeline to calculate the Fisher matrix of one redshift bin. `halo_model` and `radiofisher` are modules computing the quantities inside the boxes.  
+
+If you find any bugs, have any questions with respect to the code, please contact me.
 
 ![codesketch](sketch/code_sketch.png)
 
