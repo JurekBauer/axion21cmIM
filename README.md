@@ -1,6 +1,6 @@
 ****21cm Intenstiy Mapping with axionCAMB****
 
-This code calculates the Fisher matrices for a given 21cm intensity mapping experiment, including the axion fraction as forecasted parameter. Its general structure is based on the [bao21cm](https://gitlab.com/radio-fisher/bao21cm) code from [Bull et al. (2015)](https://arxiv.org/abs/1405.1452), though it differs conceptionally in calculating the angular power spectra, instead of the 3D comoving power spectrum in the flat sky limit.
+This code calculates the Fisher matrices for a given 21cm intensity mapping experiment, including the axion fraction as forecasted parameter. Its general structure is based on the [bao21cm](https://gitlab.com/radio-fisher/bao21cm) code from [Bull et al. (2015)](https://arxiv.org/abs/1405.1452), though it differs conceptionally in calculating the angular power spectra, instead of comoving power spectrum in the flat sky limit.
 
 To get this code running, you need to have a running [axionCAMB](https://github.com/dgrin1/axionCAMB) version installed. Change the `CAMB_EXEC` to the directory of your axionCAMB executable. 
 It is recommended to run this code with the `mpi4py`-package if one is interested to scan many surveys (and axion masses).  
