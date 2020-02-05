@@ -150,11 +150,11 @@ def hydrogen_powerspectrum(k_arr, z, powerspec_dic, cosmo, analysis_specificatio
     M_arr = np.logspace(analysis_specifications['M_min'], analysis_specifications['M_max'],
                         analysis_specifications['N_mass_mesh'])
     # Load power spectrum with including the right components
-    dict_key = rf.get_dict_key(cosmo['components_for_P'])  # powerspec_dic['dictionary_key']
+    dict_key = rf.get_dict_key(cosmo['components_for_P'])
     PS_arr = powerspec_dic['PS_' + dict_key]
     # Interpolate the power spectrum
     _P_interpolated = scipy.interpolate.interp1d(np.log(powerspec_dic['k']), np.log(PS_arr),
-                                        kind='quadratic', bounds_error=False)
+                                                 kind='quadratic', bounds_error=False)
     P_interpolated = lambda x: np.exp(_P_interpolated(np.log(x)))
     # Omega_0, depending on the components to be included
     omega_comps = powerspec_dic['omega_%s_0' % dict_key]

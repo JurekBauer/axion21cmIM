@@ -212,14 +212,12 @@ def calc_PS_from_camb_output(path_to_files, ini_filename, comps, normalization, 
     om_bh2, om_ch2 = parameter_dic['omega_bh2'], parameter_dic['omega_ch2']
     om_nuh2, om_axh2 = parameter_dic['omega_nuh2'], parameter_dic['omega_axh2']
     if transfer_filename[0] == '/':
-        print('transfer_filename = %s' % transfer_filename)
+        print('\ttransfer_filename = %s' % transfer_filename)
         transfer_dic = load_transfer_from_file(transfer_filename, '', normalization)
     else:
-        # transfer_dic = load_transfer_from_file(transfer_filename, '', normalization,
-        #                                        *comps)
         path_to_transfer_file = path_to_files.replace(path_to_files.split('/')[-2] + '/', transfer_filename)
-        print('path_to_transfer_file: %s' % path_to_transfer_file)
-        print('transfer_filename: %s' % transfer_filename)
+        print('\tpath_to_transfer_file: %s' % path_to_transfer_file)
+        print('\ttransfer_filename: %s' % transfer_filename)
         transfer_dic = load_transfer_from_file(path_to_transfer_file, '', normalization)
     dict_key = get_dict_key(comps)
     # This needs to be adapted, if you want to specify other components than
