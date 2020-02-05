@@ -2,6 +2,7 @@
 Load the input file into dictionaries used for the computation of the Fisher analysis
 '''
 
+
 def load_cosmology_input(file):
     cosmo_dic = {}
     analysis_dic = {}
@@ -10,6 +11,8 @@ def load_cosmology_input(file):
         line = line.split('=')
         if line[0] == '\n':
             continue
+        elif line[0].strip() == 'mode':
+            expt_dic['mode'] = line[1].strip()
         elif line[0].strip() == 'noise':
             analysis_dic['noise'] = line[1].strip()
         elif line[0].strip() == 'experiment_number':
@@ -34,10 +37,8 @@ def load_cosmology_input(file):
             analysis_dic['nonlinear_cutoff'] = eval(line[1].strip())        
         elif line[0].strip() == 'axfrac':
             cosmo_dic['axion_fraction'] = eval(line[1].strip())
-            # axfrac = eval(line[1].strip())
         elif line[0].strip() == 'omega_d_0':
             cosmo_dic['omega_d_0'] = eval(line[1].strip())
-            # omega_d_0 = eval(line[1].strip())
         elif line[0].split()[0] == '#':
             continue
         else:

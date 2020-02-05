@@ -40,22 +40,7 @@ with open(input_filename, 'r') as i:
 expt_dic, analysis_dic, cosmo_dic = rf.load_cosmology_input(file=lines)
 
 # Label experiments with different settings
-EXPT_LABEL = ""
-if analysis_dic['noise'] == 'bull':
-    EXPT_LABEL += '_bull-noise'
-elif analysis_dic['noise'] == 'knox':
-    EXPT_LABEL += '_knox-noise'
-elif analysis_dic['noise'] == 'chen':
-    EXPT_LABEL += '_chen-noise'
-elif analysis_dic['noise'] == 'padmanabhan':
-    EXPT_LABEL += '_padmanabhan-noise'
-elif analysis_dic['noise'] == 'interferometric':
-    EXPT_LABEL += '_interferometric-noise'
-elif analysis_dic['noise'] == 'CVlimited':
-    EXPT_LABEL += '_CVlimited-noise'
-else:
-    print('Unknown noise expression stated (%s). Will proceed with default noise expression.' % analysis_dic['noise'])
-    analysis_dic['noise'] = 'knox'
+EXPT_LABEL = '_%s_%s-noise' % (expt_dic['mode'], analysis_dic['noise'])
 
 if cosmo_dic['mnu'] > 1.e-6:
     EXPT_LABEL += '_massive-neutrinos'
@@ -65,18 +50,16 @@ expt_list = [
     ('SKA1MID',     e.SKA1MIDfull),     # 0
     ('BINGO',       e.BINGO),           # 1
     ('MeerKATb1',   e.MeerKATb1),       # 2
-    ('iSKA1MID',    e.SKA1MIDfull),     # 3
-    ('iMeerKATb1',  e.MeerKATb1),       # 4
-    ('iHIRAX',      e.HIRAX),           # 5
-    ('CV1', 	    e.CVlimited_z0to3), # 6
-    ('CV2',         e.CVlimited_z0to5), # 7
-    ('exptS',       e.exptS),           # 8
-    ('aexptM',      e.exptM),           # 9
-    ('exptL',       e.exptL),           # 10
-    ('GBT',         e.GBT),             # 11
-    ('Parkes',      e.Parkes),          # 12
-    ('GMRT',        e.GMRT),            # 13
-    ('FAST',        e.FAST),            # 14
+    ('HIRAX',       e.HIRAX),           # 3
+    ('CV1', 	    e.CVlimited_z0to3), # 4
+    ('CV2',         e.CVlimited_z0to5), # 5
+    ('exptS',       e.exptS),           # 6
+    ('aexptM',      e.exptM),           # 7
+    ('exptL',       e.exptL),           # 8
+    ('GBT',         e.GBT),             # 9
+    ('Parkes',      e.Parkes),          # 10
+    ('GMRT',        e.GMRT),            # 11
+    ('FAST',        e.FAST),            # 12
 ]
 names, expts = zip(*expt_list)
 names = list(names)
@@ -90,12 +73,12 @@ if myid == 0:
     print("Survey:", names[expt_dic['k']])
     print("=" * 50)
 
-# Tweak settings depending on chosen experiment
-expts[expt_dic['k']]['mode'] = 'dish'
-if names[expt_dic['k']][0] == "i":
-    expts[expt_dic['k']]['mode'] = "interferometric"
-
+# Set settings depending on chosen experiment
 expt = expts[expt_dic['k']]
+expt['mode'] = expt_dic['mode']
+if verbos >= 1 and myid == 0: print('Set survey parameters: \n '
+                                    'ttot = %s hrs \n ' % expt_dic['ttot'])
+expt['ttot'] *= expt_dic['ttot'] / 1e4
 
 # Load n(u) interpolation function, if needed
 if (expt['mode'][0] == 'i') and 'n(x)' in expt.keys():
@@ -120,11 +103,6 @@ if verbos >= 1 and myid == 0: print('Defining redshift bins...')
 zs, zc = rf.zbins_const_dz(expt, dz=0.05)
 if verbos >= 1 and myid == 0: print('Number of redshift bins = %i' % len(zs))
 if verbos >= 1 and myid == 0: print('Done.')
-
-# Setting
-if verbos >= 1 and myid == 0: print('Set survey parameters: \n '
-                                    'ttot = %s hrs \n ' % expt_dic['ttot'])
-expt['ttot'] *= expt_dic['ttot'] / 1e4
 
 print("*" * 50)
 for key in cosmo_dic.keys():

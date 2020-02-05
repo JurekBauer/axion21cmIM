@@ -56,7 +56,7 @@ def Cl_signal(ell, z, z_min, z_max, cosmo, cachefile, analysis_specifications):
                                      analysis_specifications=analysis_specifications, output_opt='full')
     # Prefactor in (h/Mpc)^3, C is speed of light in km/s
     prefactor = (window_function(z=z, z_min=z_min, z_max=z_max) / rr) ** 2 * HH * (z_max - z_min) / C
-    if verbos >= 2:
+    if verbos >= 3:
         plt.plot(ell, prefactor * P_HI)
         plt.xscale('log')
         plt.yscale('log')
@@ -74,31 +74,12 @@ def Cl_signal(ell, z, z_min, z_max, cosmo, cachefile, analysis_specifications):
         plt.plot(k_overview, P_2h_overview, label='2-halo', ls='--')
         plt.xscale('log')
         plt.yscale('log')
-        plt.xlabel(r'$k$ [1/Mpc]')
-        plt.ylabel(r'$P_{\rm{HI}}(k)$ [Mpc$^3$]')
+        plt.xlabel(r'$k$ [$h$/Mpc]')
+        plt.ylabel(r'$P_{\rm{HI}}(k)$ [$($Mpc$/h)^3$]')
         plt.title(r'$z = %.4f$' % z)
         plt.legend()
         plt.show()
     return prefactor * P_HI
-
-
-def dish_response(ell, z, cosmo, expt):
-    """
-    Dish beam factor, B, for the noise
-    covariance of a single-dish mode instrument.
-    """
-    # Define parallel/perp. beam scales
-    l = 3e8 * (1. + z) / (1e6 * expt['nu_line'])
-    theta_fwhm = l / expt['Ddish']
-    # Sanity check: Require that Sarea > Nbeam * (beam)^2
-    if (expt['Sarea'] < expt['Nbeam'] * theta_fwhm ** 2 / (16.0 * np.log(2))):
-        raise ValueError("Sarea is less than (Nbeam * beam^2)")
-
-    # Single-dish experiment has Gaussian beams in perp. and par. directions
-    B_tot = (ell * theta_fwhm) ** 2 / (16.0 * np.log(2))
-    B_tot[np.where(B_tot > EXP_OVERFLOW_VAL)] = EXP_OVERFLOW_VAL
-    invbeam2 = np.exp(B_tot)
-    return invbeam2
 
 
 def load_interferom_file(fname):
@@ -121,6 +102,14 @@ def Nl_noise(ell, z_min, z_max, expt, cosmo, analysis_specifications):
     cosmo:          cosmo dictionary, necessary for T_b
     analysis_specifications: e.g. noise_expression, ...
     '''
+    def dish_response(ell_arr, theta_fwhm, expt):
+        # Sanity check: Require that Sarea > Nbeam * (beam)^2
+        if (expt['Sarea'] < expt['Nbeam'] * theta_fwhm ** 2 / (8.0 * np.log(2))):
+            raise ValueError("Sarea is less than (Nbeam * beam^2)")
+        B_tot = (ell_arr * theta_fwhm) ** 2 / (8.0 * np.log(2))
+        B_tot[np.where(B_tot > EXP_OVERFLOW_VAL)] = EXP_OVERFLOW_VAL
+        Wl = np.exp(B_tot)
+        return Wl
     z = 0.5 * (z_min + z_max)  # Center of redshift bin
     Tb = mean_brightness_temperature(z=z, cosmo_dic=cosmo)
     print('\tmean brightness temperature T_b = %.3e mK' % Tb)
@@ -137,52 +126,40 @@ def Nl_noise(ell, z_min, z_max, expt, cosmo, analysis_specifications):
     if expt['mode'] == 'dish':
         if analysis_specifications['noise'] == 'bull':
             # Calculate base noise properties
-            Vsurvey = expt['Sarea']  # * dnu_bin / expt['nu_line']
+            Vsurvey = expt['Sarea']
             noise = Tsys ** 2. * Vsurvey / (npol * expt['ttot'] * dnu_bin)
             Aeff = effic * 0.25 * np.pi * expt['Ddish'] ** 2. \
                 if 'Aeff' not in expt.keys() else expt['Aeff']
             theta_b = wavelength / expt['Ddish']
             noise *= wavelength ** 4. / (Aeff ** 2. * theta_b ** 4.)
             noise *= 1. / (expt['Ndish'] * expt['Nbeam'])
-            noise *= dish_response(ell=ell, z=z, cosmo=cosmo, expt=expt)
+            noise *= dish_response(ell_arr=ell, theta_fwhm=theta_b, expt=expt)
             noise /= Tb ** 2
         elif analysis_specifications['noise'] == 'padmanabhan':
             # dnu_bin = expt['dnu']                     # dnu of redshift bin
             theta_b = wavelength / (expt['Ddish'] * expt['Ndish'])
-            sigma2_b = theta_b ** 2 / (8 * np.log(2))  # \sigma^2_{\rm{beam}}
             # Set together all the relevant parts
             sigma2_pix = Tsys ** 2. / (npol * expt['ttot'] * dnu_bin)  # sigma_^2_pix
-            Wl = np.exp(- ell ** 2 * sigma2_b)
+            Wl = dish_response(ell_arr=ell, theta_fwhm=theta_b, expt=expt)
             omega_pix = theta_b ** 2  # Omega_pix
             noise = (sigma2_pix / Tb ** 2) * omega_pix / Wl
         else:
             theta_b = wavelength / (expt['Ddish'])
-            sigma2_b = theta_b ** 2 / (8.0 * np.log(2))  # sigma^2_beam
             # Set together all the relevant parts
             sigma2_pix = Tsys ** 2. / (npol * expt['ttot'] * dnu_bin * expt['Ndish'] * expt['Nbeam'])  # sigma_^2_pix
-            B_tot = ell ** 2 * sigma2_b
-            B_tot[np.where(B_tot > EXP_OVERFLOW_VAL)] = EXP_OVERFLOW_VAL
-            Wl = np.exp(B_tot)
+            Wl = dish_response(ell_arr=ell, theta_fwhm=theta_b, expt=expt)
             if analysis_specifications['noise'] == 'chen':
                 noise = (sigma2_pix / Tb ** 2) * Wl * 4. * np.pi
             elif analysis_specifications['noise'] == 'knox':
                 noise = (sigma2_pix / Tb ** 2) * Wl * expt['Sarea']
-            elif analysis_specifications['noise'] == 'CVlimited':
-                print('\tNl_noise(): Cosmic variance limited survey. Setting noise to 0.')
-                noise = np.array([0.] * len(ell))
             else:
-                noise = np.array([0.] * len(ell))
-        if analysis_specifications['nonlinear_cutoff']:
-            print('\tNl_noise(): Cut-off non-linear scales.')
-            k_nl = 0.14 / cosmo['h'] * (1.0 + z) ** (2.0/(2.0 + cosmo['ns']))
-            ell_nl = k_nl * comoving_distance(z=z, om_m=get_omega_M(cosmo=cosmo))
-            noise[np.where(ell > ell_nl)] = INF_NOISE
-        return noise
+                print('\tNl_noise(): Unknown noise expression in \'dish\' given. Abort.')
+                raise IOError
     elif expt['mode'] == 'interferometric':
         if "n(x)" in expt.keys():
             # Rescale n(x) with freq.-dependence
             print("\tUsing user-specified baseline density, n(u)")
-            x = (ell / (2. * np.pi))/ nu  # x = u / (freq [MHz]) = 2 pi ell / (freq [MHz])
+            x = (ell / (2. * np.pi)) / nu  # x = u / (freq [MHz]) = 2 pi ell / (freq [MHz])
             n_u = expt['n(x)'](x) / nu ** 2.  # n(x) = n(u) * nu^2
             n_u[np.where(n_u == 0.)] = 1. / INF_NOISE
         else:
@@ -190,33 +167,39 @@ def Nl_noise(ell, z_min, z_max, expt, cosmo, analysis_specifications):
             print("\tUsing uniform baseline density, n(u) ~ const.")
             u_min = expt['Dmin'] / wavelength
             u_max = expt['Dmax'] / wavelength
-
             # Sanity check: Physical area of array must be > combined area of dishes
             ff = expt['Ndish'] * (expt['Ddish'] / expt['Dmax']) ** 2.  # Filling factor
             print("\tArray filling factor: %3.3f" % ff)
             if ff > 1.:
                 raise ValueError(("Filling factor is > 1; dishes are too big to "
                                   "fit in specified area (out to Dmax)."))
-
             # Uniform density n(u)
             n_u = expt['Ndish'] * (expt['Ndish'] - 1.) * wavelength ** 2. * np.ones(ell.shape) \
                   / (2. * np.pi * (expt['Dmax'] ** 2. - expt['Dmin'] ** 2.))
             n_u[np.where(ell < u_min * 2.0 * np.pi)] = 1. / INF_NOISE
             n_u[np.where(ell > u_max * 2.0 * np.pi)] = 1. / INF_NOISE
-        FOV = wavelength ** 2 / expt['Ddish']
-        noise = Tsys ** 2 * FOV ** 2 / (npol * dnu_bin * expt['ttot'] * n_u * Tb ** 2)
-        if analysis_specifications['noise'] == 'CVlimited':
-            print('\tNl_noise(): Cosmic variance limited survey. Setting noise to 0.')
-            noise = np.array([0.] * len(ell))
-        if analysis_specifications['nonlinear_cutoff']:
-            print('\tNl_noise(): Cut-off non-linear scales.')
-            k_nl = 0.14 / cosmo['h'] * (1.0 + z) ** (2.0/(2.0 + cosmo['ns']))
-            ell_nl = k_nl * comoving_distance(z=z, om_m=get_omega_M(cosmo=cosmo))
-            noise[np.where(ell > ell_nl)] = INF_NOISE
-        return noise
+        FOV = wavelength ** 2. / expt['Ddish'] ** 2.
+        if analysis_specifications['noise'] == 'optimistic':
+            # the optimistic scenario as denoted in arXiv:1907.00071 by Portsidou & Metcalf (2014)
+            noise = Tsys ** 2 * FOV ** 2 / (npol * dnu_bin * expt['ttot'] * n_u * Tb ** 2)
+        elif analysis_specifications['noise'] == 'pessimistic':
+            # the more pessimistic scenario (arXiv:1907.00071) as in Bull et al. (2015)
+            noise = Tsys ** 2 * FOV * expt['Sarea'] / (npol * dnu_bin * expt['ttot'] * n_u * Tb ** 2)
+        else:
+            print('\tNl_noise(): Unknown noise expression in \'interferometric\' given. Abort.')
+            raise IOError
+    elif expt['mode'] == 'CVlimited':
+        print('\tNl_noise(): Cosmic variance limited survey. Setting noise to 0.')
+        noise = np.array([0.] * len(ell))
     else:
         print('\tNl_noise(): No other mode than \'dish\' and \'interferometric\' implemented, yet. Abort.')
         raise IOError
+    if analysis_specifications['nonlinear_cutoff']:
+        print('\tNl_noise(): Cut-off non-linear scales.')
+        k_nl = 0.14 / cosmo['h'] * (1.0 + z) ** (2.0 / (2.0 + cosmo['ns']))
+        ell_nl = k_nl * comoving_distance(z=z, om_m=get_omega_M(cosmo=cosmo)) - 0.5
+        noise[np.where(ell > ell_nl)] = INF_NOISE
+    return noise
 
 
 def deriv_wrapper(ell_arr, zmin, zmax, cosmo, analysis_specifications, deriv_opt, cachefile_fid,
@@ -429,7 +412,7 @@ def integrate_fisher_elements(derivs, DeltaCl_squared_arr):
                 F[j, i] = F[i, j]
                 if verbos >= 2:
                     plt.plot(term)
-                    plt.title('Fisher matrix')
+                    plt.title('(%i, %i) Fisher matrix' % (i, j))
                     plt.show()
     return F
 
@@ -515,7 +498,7 @@ def load_power_spectrum(cosmo, analysis_specifications, cachefile,
     # Set-up axionCAMB parameters
     if verbos >= 1: print('\tSet up axionCAMB parameters.')
     p = convert_to_camb(cosmo)
-    p['transfer_kmax'] = analysis_specifications['CAMB_kmax'] # CAMB_KMAX / cosmo['h'] if kmax <= 14. else 14.
+    p['transfer_kmax'] = analysis_specifications['CAMB_kmax']
     p['transfer_high_precision'] = 'T'
     p['transfer_k_per_logint'] = analysis_specifications['transfer_k_perlogint']
 

@@ -192,7 +192,7 @@ def hydrogen_powerspectrum(k_arr, z, powerspec_dic, cosmo, analysis_specificatio
                                       relation=cosmo['HI_halo_formula'],
                                       plot_integrand=False, log_integration=True,
                                       **cosmo['HI_halo_formula_args'])
-        print('\talpha in HI halo mass relation = %f' % alpha)
+        print('\talpha in HI halo mass relation = %f at axion fraction = %f' % (alpha, cosmo['axion_fraction']))
         cosmo['HI_halo_formula_args']['alpha'] = alpha
 
     hydrogen_powerspec_one = PS_one_halo_term(k_arr=k_arr,

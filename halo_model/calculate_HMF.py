@@ -1,5 +1,6 @@
 import astropy.constants as const
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import numpy as np
 from scipy import integrate
 
@@ -74,11 +75,35 @@ def sigma_R(R, k_arr, PS_arr, plotting=False, label='', scipy_opt=True):
         ''' % (len(PS_arr), len(k_arr))
     integrand_arr = PS_arr * spherical_tophat_window_function(k=k_arr, R=R) ** 2 * k_arr ** 2
     if plotting:
-        plt.plot(k_arr, integrand_arr[0], label='integrand')
-        plt.xlabel('$k$ [$h$/Mpc]')
-        plt.ylabel(' [some units]')
-        plt.title('Ingredients for $\sigma^2(R)$ for %s' % label)
-        plt.legend()
+        cmap = cm.get_cmap('cividis')
+        alp = 1.0
+        lmu = R[-1]  # upper mass
+        lml = R[0]  # lower mass
+        grad = 1 / (lmu - lml)
+        const = -(lml / (lmu - lml))
+        Z = [[0, 0], [0, 0]]
+        lowlevels = np.linspace(lml, lmu, 6)
+        levels = np.linspace(lml, lmu, 100)
+        CS3 = plt.contourf(Z, levels, cmap=cmap)
+        plt.clf()
+        fig, ax = plt.subplots(1,1)
+        for i in range(len(R)):
+            if i % 99:
+                continue
+            else:
+                pass
+            Rval = R[i]
+            col = cmap(grad * Rval + const)
+            ax.plot(k_arr, integrand_arr[i] * k_arr, ls='-', color=col, alpha=alp)
+        ax.plot(k_arr, PS_arr, ls='-', color='k', alpha=alp)
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlabel(r'$k$ [$h$/Mpc]')
+        ax.set_ylabel(' [some units]')
+        ax.set_title(r'Ingredients for $\sigma^2(R)$ for %s' % label)
+        ax.legend()
+        cbar = fig.colorbar(CS3, ticks=lowlevels)  # , cax=cbar_ax)
+        cbar.set_label(r'$R [Mpc$/h$]$', rotation=90)
         plt.show()
     if scipy_opt:
         sigma_squared = integrate.simps(y=integrand_arr, x=k_arr, axis=-1) / (2 * np.pi ** 2)
@@ -95,7 +120,7 @@ def sigma_M(M, k_arr, PS_arr, omega_0, plotting=False, scipy_opt=True):
     '''
     R = radius_from_mass(M=M, omega_0=omega_0)
     if plotting:
-        label = 'R = %.4f Mpc/h from M = %.2e solar_mass/h' % (R, M)
+        label = r'$R = %.4f$ Mpc$/h$ from $M = %.2e$ $M_\odot/h$' % (R[0], M[0])
     else:
         label = ''
     return sigma_R(R=R, k_arr=k_arr, PS_arr=PS_arr, plotting=plotting, label=label, scipy_opt=scipy_opt)

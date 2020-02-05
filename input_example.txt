@@ -15,7 +15,8 @@ c_HI0 =            28.65
 ma = -24
 components_for_P = ('CDM', 'baryon', 'axion')
 # experimental specifications
-experiment_number = 5
+experiment_number = 3
+mode = interferometric
 ttot = 10000 #  [h]
 # analysis specifications
 noise = knox
